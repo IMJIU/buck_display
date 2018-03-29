@@ -30,9 +30,9 @@ func GetBuckInfo(w http.ResponseWriter, r *http.Request) {
 	//dt := time.Now().Format("200601021504")
 	var result string
 	if (len(dt) == 0) {
-		result = DB.GetBuckTrendList("")
+		result = DB.GetBuckTrendList("",r.Form["asc"][0],r.Form["limit"][0])
 	} else {
-		result = DB.GetBuckTrendList(dt[0])
+		result = DB.GetBuckTrendList(dt[0],r.Form["asc"][0],r.Form["limit"][0])
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型

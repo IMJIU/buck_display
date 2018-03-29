@@ -35,12 +35,12 @@ func InitDB() {
 
 var db *SimpleDb.MyDb = nil
 
-func GetBuckTrendList(dt string) string {
+func GetBuckTrendList(dt string, asc string, limit string) string {
 	var data []SimpleDb.DataRow
 	if (dt == "") {
-		data, _ = db.QueryDataRows("select * from buck_trend where dt=(select max(dt) from buck_trend) limit 100")
+		data, _ = db.QueryDataRows("select * from buck_trend where dt=(select max(dt) from buck_trend) order by (huge_m+core_m+big_m+small_m) " + asc + " limit " + limit)
 	} else {
-		data, _ = db.QueryDataRows("select * from buck_trend where dt='" + dt + "' limit 100")
+		data, _ = db.QueryDataRows("select * from buck_trend where dt='" + dt + "' order by (huge_m+core_m+big_m+small_m) " + asc + " limit " + limit)
 	}
 
 	len := len(data)

@@ -4,41 +4,185 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="echarts.min.js"></script>
-    <script src="jquery-3.3.1.min.js"></script>
+    <!--<script src="jquery-3.3.1.min.js"></script>-->
+    <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
     <script src="common.js"></script>
+    <script src="WdatePicker.js"></script>
+    <script src="jquery.date.js"></script>
 </head>
 
 <body>
+
+<center>
+    <div id="div1"></div>
+    Time：
+    <input id="decT" type="button" value="-"/>
+    <input id="incT" type="button" value="+"/>
+    正负：
+    <select id="asc" onchange="if(pd)dtChange(pdt);else getDefaultDt();">
+        <option value="desc">+</option>
+        <option value="asc">-</option>
+    </select>
+
+    <button name="" onclick="dtChange(pd+'0930')">9点半</button>
+    <button name="" onclick="dtChange(pd+'1030')">10点半</button>
+    <button name="" onclick="dtChange(pd+'1130')">11点半</button>
+    <button name="" onclick="dtChange(pd+'1330')">1点半</button>
+    <button name="" onclick="dtChange(pd+'1430')">2点半</button>
+    <button name="" onclick="dtChange(pd+'1530')">3点半</button>
+    <button name="" onclick="if(pd)dtChange(pdt);else getDefaultDt();">最新</button>
+
+    个数：
+    <input class="addBtn min" type="button" value="-"/>
+    <input class="limit_cnt" type="text" value="8" style="width: 12px;">
+    <input class="addBtn add" type="button" value="+"/>
+</center>
+
 <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
-<div id="main" style="width: 1280px;height:800px;"></div>
+<div id="main" style="width: 1960px;height:800px;"></div>
 <script>
+    var t = $(".limit_cnt");
+    var asc = $('#asc');
+    function getUrl() {
+        return "http://localhost:8888/buckInfo?limit=" + t.val() + "&asc=" + asc.val();
+    }
+    function getUrlDt() {
+        return "http://localhost:8888/buckInfo?limit=" + t.val() + "&asc=" + asc.val() + "&dt=" + pdt;
+    }
+    $(function () {
+        $("#incT").click(function () {
+            var y = pdt.substring(0, 4);
+            var m = pdt.substring(4, 6);
+            var d = pdt.substring(6, 8);
+            var h = parseInt(pdt.substring(8, 10));
+            var mm = parseInt(pdt.substring(10, 12));
+            console.log(h,mm,pdt);
+            mm += 1;
+            if (mm >= 60) {
+                h += 1;
+                mm = 0;
+            }
+            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) + mm;
+            console.log(h,mm,pdt);
+            date = y+"-"+m+"-"+d+" "+h+":"+mm+":00";
+            WdatePicker({minDate: date, maxDate: date});
+        });
+        $("#decT").click(function () {
+            var y = pdt.substr(0, 4);
+            var m = pdt.substr(4, 6);
+            var d = pdt.substr(6, 8);
+            var h = pdt.substr(8, 10);
+            var mm = pdt.substr(10, 12);
+            mm += 1;
+            if (mm >= 60) {
+                h += 1;
+                mm = 0;
+            }
+            pdt = pdt.substr(0, 8) + h + mm;
+            console.log(pdt);
+//            date = y+"-"+m+"-"+d;
+            WdatePicker({minDate: pdt, maxDate: pdt});
+        });
+        $(".add").click(function () {
+            t.val(parseInt(t.val()) + 1); //点击加号输入框数值加1
+        });
+        $(".min").click(function () {
+            t.val(parseInt(t.val()) - 1); //点击减号输入框数值减1
+            if (t.val() <= 0) {
+                t.val(parseInt(t.val()) + 1); //最小值为1
+            }
+        });
+        $(".limit_cnt").keyup(function () {
+            var c = $(this);
+            if (/[^\d]/.test(c.val())) {//替换非数字字符
+                var amount = c.val().replace(/[^\d]/g, '');
+                $(this).val(amount);
+            }
+        });
+        getDefaultDt();
+    });
+    function getDefaultDt() {
+        $.get(getUrl(), function (data, status) {
+            refreshData(data);
+        });
+    }
+    var pd = getDt();
+    var pdt = pd + "0940";
+    WdatePicker({
+        skin: 'whyGreen',
+        eCont: 'div1',
+        el: this,
+        dateFmt: 'yyyyMMddHHmm',
+        Hchanged: wdateChange,
+        mchanged: wdateChange,
+        onpicking: wdateChange
+    });
+    function wdateChange(dp) {
+        pdt = dp.cal.getNewDateStr();
+        pd = dp.cal.getNewDateStr().substr(0, 8);
+        dtChange(pdt)
+    }
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('main'));
 
-    $.get("http://localhost:8888/buckInfo?dt=201803211401", function (data, status) {
+    function initMoney(huge, hugeM, core, coreM, big, bigM, mid, midM, small, smallM, series) {
+        huge.name = "H";
+        big.name = "B";
+        mid.name = "M";
+        core.name = "C";
+        small.name = "S";
+        huge.data = hugeM;
+        core.data = coreM;
+        mid.data = midM;
+        big.data = bigM;
+        small.data = smallM;
+        huge.type = "bar";
+        core.type = "bar";
+        mid.type = "bar";
+        big.type = "bar";
+        small.type = "bar";
+        series.push(core);
+        series.push(huge);
+        series.push(big);
+        series.push(mid);
+        series.push(small);
+    }
+    function refreshData(data) {
         var series = [];
-        var coreM,hugeM,bigM,midM = [];
-        var core,huge,big,mid = new Object();
-
+        var hugeM = [];
+        var huge = {};
+        var bigM = [];
+        var big = {};
+        var midM = [];
+        var mid = {};
+        var smallM = [];
+        var small = {};
+        var coreM = [];
+        var core = {};
         var set = new HashSet();
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
             set.put(d.Trade_name);
-            hugeM[i]=d.Huge_m;
-            coreM[i]=d.Core_m;
-            bigM[i]=d.Big_m;
-            midM[i]=d.Mid_m;
+            hugeM.push(d.Huge_m);
+            coreM.push(d.Core_m);
+            bigM.push(d.Big_m);
+            midM.push(d.Mid_m);
+            smallM.push(d.Small_m);
         }
-        huge.data=hugeM;
-        series.push(huge);
-        series.push(core);
-        series.push(big);
-        series.push(mid);
+        initMoney(huge, hugeM, core, coreM, big, bigM, mid, midM, small, smallM, series);
         xAxis = set.getAll();
-        console.log("axis",xAxis);
         option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    crossStyle: {
+                        color: '#999'
+                    }
+                }
+            },
             legend: {
-                data: ['蒸发量', '降水量', '平均温度']
+                data: ["C", 'H', 'B', 'M', 'S']
             },
             xAxis: [
                 {
@@ -52,51 +196,76 @@
             yAxis: [
                 {
                     type: 'value',
-                    name: '水量',
-                    min: 0,
-                    max: 250,
-                    interval: 50,
+                    name: 'money',
                     axisLabel: {
-                        formatter: '{value} ml'
+                        formatter: '{value} 万元'
                     }
-                },
-                {
+                }, {
                     type: 'value',
-                    name: '温度',
-                    min: 0,
-                    max: 25,
-                    interval: 5,
+                    name: 'money',
                     axisLabel: {
-                        formatter: '{value} °C'
+                        formatter: '{value} 万元'
                     }
                 }
             ],
-            series: [
-                {
-                    name: '蒸发量',
-                    type: 'bar',
-                    data: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3]
-                },
-                {
-                    name: '降水量',
-                    type: 'bar',
-                    data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3]
-                },
-                {
-                    name: '平均温度',
-                    type: 'line',
-                    yAxisIndex: 1,
-                    data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
-                }
-            ]
+            series: series
         };
         // 使用刚指定的配置项和数据显示图表。
-//        myChart.setOption(option);
-    });
+        myChart.setOption(option);
+    }
+
+    function dtChange(dt) {
+        $.get(getUrl() + "&dt=" + dt, function (data, status) {
+            refreshData(data);
+        });
+    }
+
+    //获取当前时间，格式YYYY-MM-DD
+    function getDt() {
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        var currentdate = year + month + strDate;
+        return currentdate;
+    }
+
+    function getDt() {
+        var date = new Date();
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        var currentdate = year + month + strDate;
+        return currentdate;
+    }
 </script>
 </body>
 </html>
 <!--
+<script>
+//返回一个随机的日期
+function randomDate(){
+var Y = 2000 + Math.round(Math.random() * 10);
+var M = 1 + Math.round(Math.random() * 11);
+var D = 1 + Math.round(Math.random() * 27);
+return Y+'-'+M+'-'+D;
+}
+</script>
+<input type="text" class="Wdate" id="d434" onclick="var date=randomDate();WdatePicker({minDate:date,maxDate:date})"/>
+
+
 option = {
 tooltip: {
 trigger: 'axis',
