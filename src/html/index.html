@@ -14,12 +14,12 @@
 <body>
 
 <center>
-    <div id="div1"></div>
+    <input id="dd" type="text" onClick="WdatePicker({  dateFmt: 'yyyyMMddHHmm'})" onchange="dtChange(this.value)"/>
     Time：
     <input id="decT" type="button" value="-"/>
     <input id="incT" type="button" value="+"/>
     正负：
-    <select id="asc" onchange="if(pd)dtChange(pdt);else getDefaultDt();">
+    <select id="asc" onchange="if(!isOver())dtChange(pdt);else getDefaultDt();">
         <option value="desc">+</option>
         <option value="asc">-</option>
     </select>
@@ -30,7 +30,7 @@
     <button name="" onclick="dtChange(pd+'1330')">1点半</button>
     <button name="" onclick="dtChange(pd+'1430')">2点半</button>
     <button name="" onclick="dtChange(pd+'1530')">3点半</button>
-    <button name="" onclick="if(pd)dtChange(pdt);else getDefaultDt();">最新</button>
+    <button name="" onclick="if(!isOver())dtChange(pdt);else getDefaultDt();">最新</button>
 
     个数：
     <input class="addBtn min" type="button" value="-"/>
@@ -56,32 +56,33 @@
             var d = pdt.substring(6, 8);
             var h = parseInt(pdt.substring(8, 10));
             var mm = parseInt(pdt.substring(10, 12));
-            console.log(h,mm,pdt);
+            console.log(h, mm, pdt);
             mm += 1;
             if (mm >= 60) {
                 h += 1;
                 mm = 0;
             }
             pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) + mm;
-            console.log(h,mm,pdt);
-            date = y+"-"+m+"-"+d+" "+h+":"+mm+":00";
-            WdatePicker({minDate: date, maxDate: date});
+            console.log(h, mm, pdt);
+            $('#dd').val(pdt);
+            dtChange(pdt);
         });
         $("#decT").click(function () {
-            var y = pdt.substr(0, 4);
-            var m = pdt.substr(4, 6);
-            var d = pdt.substr(6, 8);
-            var h = pdt.substr(8, 10);
-            var mm = pdt.substr(10, 12);
-            mm += 1;
-            if (mm >= 60) {
-                h += 1;
-                mm = 0;
+            var y = pdt.substring(0, 4);
+            var m = pdt.substring(4, 6);
+            var d = pdt.substring(6, 8);
+            var h = parseInt(pdt.substring(8, 10));
+            var mm = parseInt(pdt.substring(10, 12));
+            console.log(h, mm, pdt);
+            mm -= 1;
+            if (mm < 0) {
+                h -= 1;
+                mm = 59;
             }
-            pdt = pdt.substr(0, 8) + h + mm;
-            console.log(pdt);
-//            date = y+"-"+m+"-"+d;
-            WdatePicker({minDate: pdt, maxDate: pdt});
+            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) +(mm < 10 ? "0" + mm : mm);
+            console.log(h, mm, pdt);
+            $('#dd').val(pdt);
+            dtChange(pdt);
         });
         $(".add").click(function () {
             t.val(parseInt(t.val()) + 1); //点击加号输入框数值加1
@@ -106,17 +107,26 @@
             refreshData(data);
         });
     }
-    var pd = getDt();
-    var pdt = pd + "0940";
-    WdatePicker({
-        skin: 'whyGreen',
-        eCont: 'div1',
-        el: this,
-        dateFmt: 'yyyyMMddHHmm',
-        Hchanged: wdateChange,
-        mchanged: wdateChange,
-        onpicking: wdateChange
-    });
+    var pd = getD();
+    var pdt = getDt();
+    if (pdt < pd + "0940") {
+        pdt = pd + "0940";
+    }
+    if (pdt > pd + "1530") {
+        pdt = pd + "1530";
+    }
+    function wp(){
+        WdatePicker({
+            skin: 'whyGreen',
+//            eCont: 'div1',
+            el: this,
+            dateFmt: 'yyyyMMddHHmm',
+            Hchanged: wdateChange,
+            mchanged: wdateChange,
+            onpicking: wdateChange
+        });
+    }
+
     function wdateChange(dp) {
         pdt = dp.cal.getNewDateStr();
         pd = dp.cal.getNewDateStr().substr(0, 8);
@@ -137,15 +147,16 @@
         big.data = bigM;
         small.data = smallM;
         huge.type = "bar";
-        core.type = "bar";
+        core.type = "line";
+        core.yAxisIndex = 1;
         mid.type = "bar";
         big.type = "bar";
         small.type = "bar";
-        series.push(core);
         series.push(huge);
         series.push(big);
         series.push(mid);
         series.push(small);
+        series.push(core);
     }
     function refreshData(data) {
         var series = [];
@@ -182,7 +193,7 @@
                 }
             },
             legend: {
-                data: ["C", 'H', 'B', 'M', 'S']
+                data: ['H', 'B', 'M', 'S', "C"]
             },
             xAxis: [
                 {
@@ -215,13 +226,26 @@
     }
 
     function dtChange(dt) {
+        pdt = dt;
+        $('#dd').val(dt);
         $.get(getUrl() + "&dt=" + dt, function (data, status) {
             refreshData(data);
         });
     }
+    function isOver(){
+        var pd = getD();
+        var pdt = getDt();
+        if (pdt < pd + "0940") {
+           return true;
+        }
+        if (pdt > pd + "1530") {
+            return true;
+        }
+        return false;
+    }
 
     //获取当前时间，格式YYYY-MM-DD
-    function getDt() {
+    function getD() {
         var date = new Date();
         var year = date.getFullYear();
         var month = date.getMonth() + 1;
@@ -241,13 +265,21 @@
         var year = date.getFullYear();
         var month = date.getMonth() + 1;
         var strDate = date.getDate();
+        var m = date.getMinutes();
+        var h = date.getHours();
         if (month >= 1 && month <= 9) {
             month = "0" + month;
         }
         if (strDate >= 0 && strDate <= 9) {
             strDate = "0" + strDate;
         }
-        var currentdate = year + month + strDate;
+        if (m >= 0 && m <= 9) {
+            m = "0" + m;
+        }
+        if (h >= 0 && h <= 9) {
+            h = "0" + h;
+        }
+        var currentdate = year + month + strDate + h + m ;
         return currentdate;
     }
 </script>
