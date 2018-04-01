@@ -1,7 +1,26 @@
 /**
  * Created by zhoulf on 2018/3/22.
  */
-
+/**
+ * 得到url上的参数
+ */
+function getParam(name){
+    var search = window.location.search.substr(1);
+    if(search.indexOf(name)!=-1){
+        var ps = search.split('&')
+        for(var i =0;i<ps.length;i++){
+            var p = ps[i];
+            var kv = p.split('=');
+            if(kv.length==2){
+                if(kv[0]==name){
+                    return kv[1];
+                }
+            }else{
+                return null;
+            }
+        }
+    }
+}
 function HashMap() {
     var obj = new Object();
     this.put = function(key,value) {

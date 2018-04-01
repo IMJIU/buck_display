@@ -36,6 +36,7 @@ func InitDB() {
 var db *SimpleDb.MyDb = nil
 
 func GetBuckTrendList(dt string, asc string, limit string) string {
+	fmt.Println("GetBuckTrendList dt", dt, "asc", asc, "limit", limit)
 	var data []SimpleDb.DataRow
 	if (dt == "") {
 		data, _ = db.QueryDataRows("select * from buck_trend where dt=(select max(dt) from buck_trend) order by (huge_m+core_m+big_m+small_m) " + asc + " limit " + limit)
@@ -83,6 +84,86 @@ func GetBuckTrendList(dt string, asc string, limit string) string {
 	return string(s)
 }
 
+func GetTradeTrend(trade string, start string, end string) string {
+	fmt.Println("GetTradeTrend trade", trade, "start", start, "end", end)
+	var data []SimpleDb.DataRow
+	sql := "with t as(" +
+		"select * from buck_trend where trade_name = '" + trade + "' and dt >= '" + start + "' and dt<='" + end + "'" +
+		")" +
+		"select * from t where dt in (" +
+		"  select max(dt) from t group by substr(dt, 1,8)" +
+		") order by  dt"
+	data, _ = db.QueryDataRows(sql)
+
+	len := len(data)
+	var arr [100]*TrendInfo
+	for i := 0; i < len; i++ {
+		t := new(TrendInfo)
+		data[i].GetValue("dt", &t.Dt)
+		data[i].GetValue("ord", &t.Ord)
+		data[i].GetValue("code", &t.Code)
+		data[i].GetValue("trade_name", &t.Trade_name)
+		data[i].GetValue("up_per", &t.Up_per)
+		data[i].GetValue("core_m", &t.Core_m)
+		data[i].GetValue("core_p", &t.Core_p)
+		data[i].GetValue("huge_m", &t.Huge_m)
+		data[i].GetValue("huge_p", &t.Huge_p)
+		data[i].GetValue("big_m", &t.Big_m)
+		data[i].GetValue("big_p", &t.Big_p)
+		data[i].GetValue("mid_m", &t.Mid_m)
+		data[i].GetValue("mid_p", &t.Mid_p)
+		data[i].GetValue("small_m", &t.Small_m)
+		data[i].GetValue("small_p", &t.Small_p)
+		data[i].GetValue("bname", &t.Bname)
+		data[i].GetValue("bcode", &t.Bcode)
+		data[i].GetValue("sh", &t.Sh)
+		data[i].GetValue("sz", &t.Sz)
+		arr[i] = t
+	}
+	s, _ := json.Marshal(arr[0:len])
+	return string(s)
+}
+
+func GetCashFlow(start string, end string) string {
+	fmt.Println("GetCashFlow", "start", start, "end", end)
+	var data []SimpleDb.DataRow
+	sql := "with t as(" +
+		"select * from buck_trend where dt in (" +
+		"  select max(dt) from buck_trend group by substr(dt, 1,8)" +
+		")" +
+		")" +
+		"select * from t where (ord >0 and ord <=3) or (ord >=58 and ord <=60) " +
+		"and dt >= '" + start + "' and dt<='" + end + "' order by dt,ord"
+	data, _ = db.QueryDataRows(sql)
+
+	len := len(data)
+	var arr [100]*TrendInfo
+	for i := 0; i < len; i++ {
+		t := new(TrendInfo)
+		data[i].GetValue("dt", &t.Dt)
+		data[i].GetValue("ord", &t.Ord)
+		data[i].GetValue("code", &t.Code)
+		data[i].GetValue("trade_name", &t.Trade_name)
+		data[i].GetValue("up_per", &t.Up_per)
+		data[i].GetValue("core_m", &t.Core_m)
+		data[i].GetValue("core_p", &t.Core_p)
+		data[i].GetValue("huge_m", &t.Huge_m)
+		data[i].GetValue("huge_p", &t.Huge_p)
+		data[i].GetValue("big_m", &t.Big_m)
+		data[i].GetValue("big_p", &t.Big_p)
+		data[i].GetValue("mid_m", &t.Mid_m)
+		data[i].GetValue("mid_p", &t.Mid_p)
+		data[i].GetValue("small_m", &t.Small_m)
+		data[i].GetValue("small_p", &t.Small_p)
+		data[i].GetValue("bname", &t.Bname)
+		data[i].GetValue("bcode", &t.Bcode)
+		data[i].GetValue("sh", &t.Sh)
+		data[i].GetValue("sz", &t.Sz)
+		arr[i] = t
+	}
+	s, _ := json.Marshal(arr[0:len])
+	return string(s)
+}
 func log(t *TrendInfo) {
 	fmt.Print("\tDt:", t.Dt)
 	fmt.Print("\tOrd:", t.Ord)

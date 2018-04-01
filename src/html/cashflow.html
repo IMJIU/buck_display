@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>buck</title>
+    <script src="echarts.min.js"></script>
+    <!--<script src="jquery-3.3.1.min.js"></script>-->
+    <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+    <script src="buck.js"></script>
+    <script src="common.js"></script>
+    <script src="WdatePicker.js"></script>
+    <script src="jquery.date.js"></script>
+</head>
+
+<body>
+<center><h1 id="title"></h1></center>
+<!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+<div id="main" style="width: 1200px;height:600px;"></div>
+<script>
+    var trade;
+    function getUrl() {
+        return "http://localhost:8888/cashflow" ;
+    }
+    $(function () {
+        $.get(getUrl() , function (data, status) {
+            refreshData(data);
+        });
+    });
+
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById('main'));
+
+
+    function refreshData(data) {
+        if (data.length == 0) {
+            return;
+        }
+        var series = [];
+        var hugeM = [];
+        var huge = {};
+        var bigM = [];
+        var big = {};
+        var smallM = [];
+        var small = {};
+        var shv = [];
+        var sh = {};
+        var set = new HashSet();
+        for (var i = 0; i < data.length; i++) {
+            var d = data[i];
+            set.put(d.Dt.substring(4,8));
+            hugeM.push(d.Huge_m);
+            bigM.push(d.Big_m);
+            shv.push(d.Sh);
+        }
+        huge.data = hugeM;
+        big.data = bigM;
+        sh.data = shv;
+        initMoney(huge,   big,   sh, series);
+        xAxis = set.getAll();
+        option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    crossStyle: {
+                        color: '#999'
+                    }
+                }
+            },
+            legend: {
+                data: ['H', 'B', 'M', 'S', "Total","SH"]
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: xAxis,
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'money',
+                    axisLabel: {
+                        formatter: '{value} 万元'
+                    }
+                }, {
+                    type: 'value',
+                    name: '大盘',
+                    axisLabel: {
+                        formatter: '{value} '
+                    }
+                }
+            ],
+            series: series
+        };
+        console.log("series",series);
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+    function initMoney(huge,    big,    sh, series) {
+        huge.name = "H";
+        big.name = "B";
+        sh.name="SH";
+        sh.yAxisIndex=1;
+        huge.type = "bar";
+        big.type = "bar";
+        sh.type="line";
+        series.push(huge);
+        series.push(big);
+        series.push(sh);
+    }
+
+</script>
+</body>
+</html>

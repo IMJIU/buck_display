@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>buck</title>
     <script src="echarts.min.js"></script>
     <!--<script src="jquery-3.3.1.min.js"></script>-->
     <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
+    <script src="buck.js"></script>
     <script src="common.js"></script>
     <script src="WdatePicker.js"></script>
     <script src="jquery.date.js"></script>
@@ -14,9 +15,9 @@
 <body>
 
 <center>
-    <input id="dd" type="text" onClick="WdatePicker({  dateFmt: 'yyyyMMddHHmm'})" onchange="dtChange(this.value)"/>
     Time：
     <input id="decT" type="button" value="-"/>
+    <input id="dd" type="text" onClick="WdatePicker({  dateFmt: 'yyyyMMddHHmm'});hasClick=true;" onchange="dtChange(this.value)"/>
     <input id="incT" type="button" value="+"/>
     正负：
     <select id="asc" onchange="if(!isOver())dtChange(pdt);else getDefaultDt();">
@@ -27,11 +28,18 @@
     <button name="" onclick="dtChange(pd+'0930')">9点半</button>
     <button name="" onclick="dtChange(pd+'1030')">10点半</button>
     <button name="" onclick="dtChange(pd+'1130')">11点半</button>
-    <button name="" onclick="dtChange(pd+'1330')">1点半</button>
-    <button name="" onclick="dtChange(pd+'1430')">2点半</button>
-    <button name="" onclick="dtChange(pd+'1530')">3点半</button>
+    <button name="" onclick="dtChange(pd+'1300')">1点</button>
+    <button name="" onclick="dtChange(pd+'14300')">2点</button>
+    <button name="" onclick="dtChange(pd+'1500')">3点</button>
     <button name="" onclick="if(!isOver())dtChange(pdt);else getDefaultDt();">最新</button>
-
+    排序：
+    <select id="type" onchange="if(!isOver())dtChange(pdt);else getDefaultDt();">
+        <option value="C">C</option>
+        <option value="H">H</option>
+        <option value="B">B</option>
+        <option value="M">M</option>
+        <option value="S">S</option>
+    </select>
     个数：
     <input class="addBtn min" type="button" value="-"/>
     <input class="limit_cnt" type="text" value="8" style="width: 12px;">
@@ -39,10 +47,11 @@
 </center>
 
 <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
-<div id="main" style="width: 1960px;height:800px;"></div>
+<div id="main" style="width: 1200px;height:600px;"></div>
 <script>
     var t = $(".limit_cnt");
     var asc = $('#asc');
+    var hasClick = false;
     function getUrl() {
         return "http://localhost:8888/buckInfo?limit=" + t.val() + "&asc=" + asc.val();
     }
@@ -51,8 +60,6 @@
     }
     $(function () {
         $("#incT").click(function () {
-            var y = pdt.substring(0, 4);
-            var m = pdt.substring(4, 6);
             var d = pdt.substring(6, 8);
             var h = parseInt(pdt.substring(8, 10));
             var mm = parseInt(pdt.substring(10, 12));
@@ -62,14 +69,12 @@
                 h += 1;
                 mm = 0;
             }
-            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) + mm;
+            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) + (mm < 10 ? "0" + mm : mm);
             console.log(h, mm, pdt);
             $('#dd').val(pdt);
             dtChange(pdt);
         });
         $("#decT").click(function () {
-            var y = pdt.substring(0, 4);
-            var m = pdt.substring(4, 6);
             var d = pdt.substring(6, 8);
             var h = parseInt(pdt.substring(8, 10));
             var mm = parseInt(pdt.substring(10, 12));
@@ -79,19 +84,21 @@
                 h -= 1;
                 mm = 59;
             }
-            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) +(mm < 10 ? "0" + mm : mm);
+            pdt = pdt.substring(0, 8) + (h < 10 ? "0" + h : h) + (mm < 10 ? "0" + mm : mm);
             console.log(h, mm, pdt);
             $('#dd').val(pdt);
             dtChange(pdt);
         });
         $(".add").click(function () {
             t.val(parseInt(t.val()) + 1); //点击加号输入框数值加1
+            dtChange(pdt);
         });
         $(".min").click(function () {
             t.val(parseInt(t.val()) - 1); //点击减号输入框数值减1
             if (t.val() <= 0) {
                 t.val(parseInt(t.val()) + 1); //最小值为1
             }
+            dtChange(pdt);
         });
         $(".limit_cnt").keyup(function () {
             var c = $(this);
@@ -102,11 +109,7 @@
         });
         getDefaultDt();
     });
-    function getDefaultDt() {
-        $.get(getUrl(), function (data, status) {
-            refreshData(data);
-        });
-    }
+
     var pd = getD();
     var pdt = getDt();
     if (pdt < pd + "0940") {
@@ -115,23 +118,6 @@
     if (pdt > pd + "1530") {
         pdt = pd + "1530";
     }
-    function wp(){
-        WdatePicker({
-            skin: 'whyGreen',
-//            eCont: 'div1',
-            el: this,
-            dateFmt: 'yyyyMMddHHmm',
-            Hchanged: wdateChange,
-            mchanged: wdateChange,
-            onpicking: wdateChange
-        });
-    }
-
-    function wdateChange(dp) {
-        pdt = dp.cal.getNewDateStr();
-        pd = dp.cal.getNewDateStr().substr(0, 8);
-        dtChange(pdt)
-    }
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('main'));
 
@@ -139,7 +125,7 @@
         huge.name = "H";
         big.name = "B";
         mid.name = "M";
-        core.name = "C";
+        core.name = "Total";
         small.name = "S";
         huge.data = hugeM;
         core.data = coreM;
@@ -148,7 +134,7 @@
         small.data = smallM;
         huge.type = "bar";
         core.type = "line";
-        core.yAxisIndex = 1;
+        core.areaStyle={normal: {}};
         mid.type = "bar";
         big.type = "bar";
         small.type = "bar";
@@ -159,6 +145,9 @@
         series.push(core);
     }
     function refreshData(data) {
+        if (data.length == 0) {
+            return;
+        }
         var series = [];
         var hugeM = [];
         var huge = {};
@@ -193,7 +182,7 @@
                 }
             },
             legend: {
-                data: ['H', 'B', 'M', 'S', "C"]
+                data: ['H', 'B', 'M', 'S', "Total"]
             },
             xAxis: [
                 {
@@ -207,13 +196,13 @@
             yAxis: [
                 {
                     type: 'value',
-                    name: 'money',
+                    name: '分类',
                     axisLabel: {
                         formatter: '{value} 万元'
                     }
                 }, {
                     type: 'value',
-                    name: 'money',
+                    name: '总',
                     axisLabel: {
                         formatter: '{value} 万元'
                     }
@@ -223,65 +212,40 @@
         };
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
+        myChart.on('click', function (params) {
+            // 控制台打印数据的名称
+            console.log(params.name,params);
+            window.open('trade.html?trade=' + encodeURIComponent(params.name));
+        });
     }
 
-    function dtChange(dt) {
+    function dtChange(dt, type) {
+        pd = dt.substring(0, 8);
         pdt = dt;
+        if (type) {
+            type = "&type=" + type;
+        } else {
+            type = "";
+        }
         $('#dd').val(dt);
-        $.get(getUrl() + "&dt=" + dt, function (data, status) {
+        $.get(getUrl() + "&dt=" + dt + type, function (data, status) {
             refreshData(data);
         });
     }
-    function isOver(){
-        var pd = getD();
-        var pdt = getDt();
-        if (pdt < pd + "0940") {
-           return true;
-        }
-        if (pdt > pd + "1530") {
-            return true;
+    function isOver() {
+        if(!hasClick){
+            var tpd = getD();
+            var tpdt = getDt();
+            if (tpdt < tpd + "0940") {
+                return true;
+            }
+            if (tpdt > tpd + "1530") {
+                return true;
+            }
         }
         return false;
     }
 
-    //获取当前时间，格式YYYY-MM-DD
-    function getD() {
-        var date = new Date();
-        var year = date.getFullYear();
-        var month = date.getMonth() + 1;
-        var strDate = date.getDate();
-        if (month >= 1 && month <= 9) {
-            month = "0" + month;
-        }
-        if (strDate >= 0 && strDate <= 9) {
-            strDate = "0" + strDate;
-        }
-        var currentdate = year + month + strDate;
-        return currentdate;
-    }
-
-    function getDt() {
-        var date = new Date();
-        var year = date.getFullYear();
-        var month = date.getMonth() + 1;
-        var strDate = date.getDate();
-        var m = date.getMinutes();
-        var h = date.getHours();
-        if (month >= 1 && month <= 9) {
-            month = "0" + month;
-        }
-        if (strDate >= 0 && strDate <= 9) {
-            strDate = "0" + strDate;
-        }
-        if (m >= 0 && m <= 9) {
-            m = "0" + m;
-        }
-        if (h >= 0 && h <= 9) {
-            h = "0" + h;
-        }
-        var currentdate = year + month + strDate + h + m ;
-        return currentdate;
-    }
 </script>
 </body>
 </html>
