@@ -48,6 +48,8 @@
         var small = {};
         var coreM = [];
         var core = {};
+        var pM = [];
+        var p = {};
         var shv = [];
         var sh = {};
         var set = new HashSet();
@@ -59,6 +61,7 @@
             bigM.push(d.Big_m);
             midM.push(d.Mid_m);
             smallM.push(d.Small_m);
+            pM.push(d.Up_per);
             shv.push(d.Sh);
         }
         huge.data = hugeM;
@@ -66,8 +69,9 @@
         mid.data = midM;
         big.data = bigM;
         small.data = smallM;
+        p.data = pM;
         sh.data = shv;
-        initMoney(huge,  core,  big,  mid,  small, sh, series);
+        initMoney(huge,  core,  big,  mid,  small, sh,p, series);
         xAxis = set.getAll();
         option = {
             tooltip: {
@@ -112,12 +116,14 @@
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     }
-    function initMoney(huge,  core,  big,  mid, small, sh, series) {
+    function initMoney(huge,  core,  big,  mid, small, sh,p, series) {
         huge.name = "H";
         big.name = "B";
         mid.name = "M";
         core.name = "Total";
         small.name = "S";
+        p.name="P";
+        p.yAxisIndex=1;
         sh.name="SH";
         sh.yAxisIndex=1;
         huge.type = "bar";
@@ -127,6 +133,8 @@
         big.type = "bar";
         small.type = "bar";
         sh.type="line";
+        p.type="line";
+        series.push(p);
         series.push(huge);
         series.push(big);
         series.push(mid);

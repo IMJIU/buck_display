@@ -38,11 +38,14 @@ var db *SimpleDb.MyDb = nil
 func GetBuckTrendList(dt string, asc string, limit string) string {
 	fmt.Println("GetBuckTrendList dt", dt, "asc", asc, "limit", limit)
 	var data []SimpleDb.DataRow
+	var sql string
 	if (dt == "") {
-		data, _ = db.QueryDataRows("select * from buck_trend where dt=(select max(dt) from buck_trend) order by (huge_m+core_m+big_m+small_m) " + asc + " limit " + limit)
+		sql = "select * from buck_trend where dt=(select max(dt) from buck_trend) order by core_m " + asc + " limit " + limit
 	} else {
-		data, _ = db.QueryDataRows("select * from buck_trend where dt='" + dt + "' order by (huge_m+core_m+big_m+small_m) " + asc + " limit " + limit)
+		sql = "select * from buck_trend where dt='" + dt + "' order by core_m " + asc + " limit " + limit
 	}
+	fmt.Println(sql);
+	data, _ = db.QueryDataRows(sql)
 
 	len := len(data)
 	var arr [100]*TrendInfo
@@ -93,6 +96,7 @@ func GetTradeTrend(trade string, start string, end string) string {
 		"select * from t where dt in (" +
 		"  select max(dt) from t group by substr(dt, 1,8)" +
 		") order by  dt"
+	fmt.Println(sql);
 	data, _ = db.QueryDataRows(sql)
 
 	len := len(data)
@@ -134,6 +138,7 @@ func GetCashFlow(start string, end string) string {
 		")" +
 		"select * from t where (ord >0 and ord <=3) or (ord >=58 and ord <=60) " +
 		"and dt >= '" + start + "' and dt<='" + end + "' order by dt,ord"
+	fmt.Println(sql);
 	data, _ = db.QueryDataRows(sql)
 
 	len := len(data)

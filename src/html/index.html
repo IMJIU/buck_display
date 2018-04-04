@@ -17,7 +17,8 @@
 <center>
     Time：
     <input id="decT" type="button" value="-"/>
-    <input id="dd" type="text" onClick="WdatePicker({  dateFmt: 'yyyyMMddHHmm'});hasClick=true;" onchange="dtChange(this.value)"/>
+    <input id="dd" type="text" onClick="WdatePicker({  dateFmt: 'yyyyMMddHHmm'});hasClick=true;"
+           onchange="dtChange(this.value)"/>
     <input id="incT" type="button" value="+"/>
     正负：
     <select id="asc" onchange="if(!isOver())dtChange(pdt);else getDefaultDt();">
@@ -121,20 +122,18 @@
     // 基于准备好的dom，初始化echarts实例
     var myChart = echarts.init(document.getElementById('main'));
 
-    function initMoney(huge, hugeM, core, coreM, big, bigM, mid, midM, small, smallM, series) {
+    function initMoney(huge, core, big, mid, small, all, series) {
         huge.name = "H";
         big.name = "B";
         mid.name = "M";
-        core.name = "Total";
         small.name = "S";
-        huge.data = hugeM;
-        core.data = coreM;
-        mid.data = midM;
-        big.data = bigM;
-        small.data = smallM;
         huge.type = "bar";
+        all.name = "P";
+        all.type = "line";
+        all.yAxisIndex=1;
+        core.name = "C";
         core.type = "line";
-        core.areaStyle={normal: {}};
+        core.areaStyle = {normal: {}};
         mid.type = "bar";
         big.type = "bar";
         small.type = "bar";
@@ -142,6 +141,7 @@
         series.push(big);
         series.push(mid);
         series.push(small);
+        series.push(all);
         series.push(core);
     }
     function refreshData(data) {
@@ -159,6 +159,8 @@
         var small = {};
         var coreM = [];
         var core = {};
+        var allM = [];
+        var all = {};
         var set = new HashSet();
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
@@ -168,8 +170,15 @@
             bigM.push(d.Big_m);
             midM.push(d.Mid_m);
             smallM.push(d.Small_m);
+            allM.push((d.Up_per).toFixed(2));
         }
-        initMoney(huge, hugeM, core, coreM, big, bigM, mid, midM, small, smallM, series);
+        huge.data = hugeM;
+        core.data = coreM;
+        mid.data = midM;
+        big.data = bigM;
+        small.data = smallM;
+        all.data = allM;
+        initMoney(huge, core, big, mid, small, all, series);
         xAxis = set.getAll();
         option = {
             tooltip: {
@@ -182,7 +191,7 @@
                 }
             },
             legend: {
-                data: ['H', 'B', 'M', 'S', "Total"]
+                data: ['H', 'B', 'M', 'S', "C","P"]
             },
             xAxis: [
                 {
@@ -202,9 +211,9 @@
                     }
                 }, {
                     type: 'value',
-                    name: '总',
+                    name: '涨幅',
                     axisLabel: {
-                        formatter: '{value} 万元'
+                        formatter: '{value} %'
                     }
                 }
             ],
@@ -214,7 +223,7 @@
         myChart.setOption(option);
         myChart.on('click', function (params) {
             // 控制台打印数据的名称
-            console.log(params.name,params);
+            console.log(params.name, params);
             window.open('trade.html?trade=' + encodeURIComponent(params.name));
         });
     }
@@ -233,7 +242,7 @@
         });
     }
     function isOver() {
-        if(!hasClick){
+        if (!hasClick) {
             var tpd = getD();
             var tpdt = getDt();
             if (tpdt < tpd + "0940") {

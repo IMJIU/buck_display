@@ -19,10 +19,10 @@
 <script>
     var trade;
     function getUrl() {
-        return "http://localhost:8888/cashflow" ;
+        return "http://localhost:8888/cashflow";
     }
     $(function () {
-        $.get(getUrl() , function (data, status) {
+        $.get(getUrl(), function (data, status) {
             refreshData(data);
         });
     });
@@ -40,22 +40,40 @@
         var huge = {};
         var bigM = [];
         var big = {};
-        var smallM = [];
-        var small = {};
+        var hugeM2 = [];
+        var huge2 = {};
+        var bigM2 = [];
+        var big2 = {};
+        var hugeM3 = [];
+        var huge3 = {};
+        var bigM3 = [];
+        var big3 = {};
         var shv = [];
         var sh = {};
         var set = new HashSet();
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
-            set.put(d.Dt.substring(4,8));
-            hugeM.push(d.Huge_m);
-            bigM.push(d.Big_m);
-            shv.push(d.Sh);
+            set.put(d.Dt.substring(4, 8));
+            if (d.Ord == 1) {
+                hugeM.push(d.Huge_m);
+                bigM.push(d.Big_m);
+                shv.push(d.Sh);
+            } else if (d.Ord == 2) {
+                hugeM2.push(d.Huge_m);
+                bigM2.push(d.Big_m);
+            } else if (d.Ord == 3) {
+                hugeM3.push(d.Huge_m);
+                bigM3.push(d.Big_m);
+            }
         }
         huge.data = hugeM;
         big.data = bigM;
+        huge2.data = hugeM2;
+        big2.data = bigM2;
+        huge3.data = hugeM3;
+        big3.data = bigM3;
         sh.data = shv;
-        initMoney(huge,   big,   sh, series);
+        initMoney(huge, huge2, huge3, big, big2, big3, sh, series);
         xAxis = set.getAll();
         option = {
             tooltip: {
@@ -68,7 +86,7 @@
                 }
             },
             legend: {
-                data: ['H', 'B', 'M', 'S', "Total","SH"]
+                data: ['H', 'H2', 'H3', 'B',"B2","B3", "SH"]
             },
             xAxis: [
                 {
@@ -96,20 +114,32 @@
             ],
             series: series
         };
-        console.log("series",series);
+        console.log("series", series);
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     }
-    function initMoney(huge,    big,    sh, series) {
+    function initMoney(huge, huge2, huge3, big, big2, big3, sh, series) {
         huge.name = "H";
-        big.name = "B";
-        sh.name="SH";
-        sh.yAxisIndex=1;
         huge.type = "bar";
-        big.type = "bar";
-        sh.type="line";
         series.push(huge);
+        huge2.name = "H2";
+        huge2.type = "bar";
+        series.push(huge2);
+        huge3.name = "H3";
+        huge3.type = "bar";
+        series.push(huge3);
+        big.name = "B";
+        big.type = "bar";
         series.push(big);
+        big2.name = "B2";
+        big2.type = "bar";
+        series.push(big2);
+        big3.name = "B3";
+        big3.type = "bar";
+        series.push(big3);
+        sh.name = "SH";
+        sh.yAxisIndex = 1;
+        sh.type = "line";
         series.push(sh);
     }
 
