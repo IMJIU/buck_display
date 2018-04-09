@@ -31,6 +31,14 @@
     var myChart = echarts.init(document.getElementById('main'));
 
 
+    function checkSize(bigM, set) {
+        if (bigM.length < set.size()) {
+            var diff = set.size() - bigM.length;
+            for (var i = 0; i < diff; i++) {
+                bigM.unshift(0);
+            }
+        }
+    }
     function refreshData(data) {
         if (data.length == 0) {
             return;
@@ -48,6 +56,18 @@
         var huge3 = {};
         var bigM3 = [];
         var big3 = {};
+        var hugeM4 = [];
+        var huge4 = {};
+        var bigM4 = [];
+        var big4 = {};
+        var hugeM5 = [];
+        var huge5 = {};
+        var bigM5 = [];
+        var big5 = {};
+        var hugeM6 = [];
+        var huge6 = {};
+        var bigM6 = [];
+        var big6 = {};
         var shv = [];
         var sh = {};
         var set = new HashSet();
@@ -61,19 +81,28 @@
             } else if (d.Ord == 2) {
                 hugeM2.push(d.Huge_m);
                 bigM2.push(d.Big_m);
-            } else if (d.Ord == 3) {
-                hugeM3.push(d.Huge_m);
-                bigM3.push(d.Big_m);
+            } else if (d.Ord == 59) {
+                hugeM5.push(d.Huge_m);
+                bigM5.push(d.Big_m);
+            } else if (d.Ord == 60) {
+                hugeM6.push(d.Huge_m);
+                bigM6.push(d.Big_m);
             }
         }
+        checkSize(bigM5, set);
+        checkSize(hugeM5, set);
+        checkSize(hugeM6, set);
+        checkSize(bigM6, set);
         huge.data = hugeM;
         big.data = bigM;
         huge2.data = hugeM2;
         big2.data = bigM2;
-        huge3.data = hugeM3;
-        big3.data = bigM3;
+        huge5.data = hugeM5;
+        big5.data = bigM5;
+        huge6.data = hugeM6;
+        big6.data = bigM6;
         sh.data = shv;
-        initMoney(huge, huge2, huge3, big, big2, big3, sh, series);
+        initMoney(huge, huge2, huge5, huge6, big, big2, big5, big6, sh, series);
         xAxis = set.getAll();
         option = {
             tooltip: {
@@ -86,7 +115,7 @@
                 }
             },
             legend: {
-                data: ['H', 'H2', 'H3', 'B',"B2","B3", "SH"]
+                data: ['H', 'H2', 'H3', 'B', "B2", "B3", "SH"]
             },
             xAxis: [
                 {
@@ -107,8 +136,9 @@
                 }, {
                     type: 'value',
                     name: '大盘',
+                    min:2800,
                     axisLabel: {
-                        formatter: '{value} '
+                        formatter: '{value} 点'
                     }
                 }
             ],
@@ -118,25 +148,33 @@
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     }
-    function initMoney(huge, huge2, huge3, big, big2, big3, sh, series) {
+    function initMoney(huge, huge2, huge5, huge6, big, big2, big5, big6, sh, series) {
         huge.name = "H";
         huge.type = "bar";
         series.push(huge);
         huge2.name = "H2";
         huge2.type = "bar";
         series.push(huge2);
-        huge3.name = "H3";
-        huge3.type = "bar";
-        series.push(huge3);
+
+        huge5.name = "H5";
+        huge5.type = "bar";
+        series.push(huge5);
+        huge6.name = "H6";
+        huge6.type = "bar";
+        series.push(huge6);
         big.name = "B";
         big.type = "bar";
         series.push(big);
         big2.name = "B2";
         big2.type = "bar";
         series.push(big2);
-        big3.name = "B3";
-        big3.type = "bar";
-        series.push(big3);
+
+        big5.name = "B5";
+        big5.type = "bar";
+        series.push(big5);
+        big6.name = "B6";
+        big6.type = "bar";
+        series.push(big6);
         sh.name = "SH";
         sh.yAxisIndex = 1;
         sh.type = "line";

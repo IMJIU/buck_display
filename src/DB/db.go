@@ -148,18 +148,25 @@ func GetTradeCom(trade string, start string, end string) string {
 func GetCashFlow(start string, end string) string {
 	fmt.Println("GetCashFlow", "start", start, "end", end)
 	var data []SimpleDb.DataRow
-	sql := "with t as(" +
-		"select * from buck_trend where dt in (" +
-		"  select max(dt) from buck_trend group by substr(dt, 1,8)" +
-		")" +
-		")" +
-		"select * from t where (ord >0 and ord <=3) or (ord >=58 and ord <=60) " +
-		"and dt >= '" + start + "' and dt<='" + end + "' order by dt,ord"
+	//sql := "with t as(" +
+	//	"select * from buck_trend where dt in (" +
+	//	"  select max(dt) from buck_trend group by substr(dt, 1,8)" +
+	//	")" +
+	//	")" +
+	//	"select * from t where (ord >0 and ord <=3) or (ord >=58 and ord <=60) " +
+	//	"and dt >= '" + start + "' and dt<='" + end + "' order by dt,ord"
+
+	sql:=" with t as(select * from buck_trend where dt in (  select max(dt) from buck_trend group by substr(dt, 1,8)))"+
+		", t2 as(select substr(dt, 1,8) as dt,max(ord) as ord from t group by substr(dt, 1,8))"+
+		" select distinct t1.* from t t1,t2"+
+		" where  substr(t1.dt, 1,8) = t2.dt and ((t1.ord >0 and t1.ord <=3) or (t1.ord >= t2.ord-3)) "+
+		" and t1.dt >= '" + start + "' and t1.dt<='" + end + "' "+
+		" order by t1.dt,t1.ord"
 	fmt.Println(sql);
 	data, _ = db.QueryDataRows(sql)
 
 	len := len(data)
-	var arr [100]*TrendInfo
+	var arr [200]*TrendInfo
 	for i := 0; i < len; i++ {
 		t := new(TrendInfo)
 		data[i].GetValue("dt", &t.Dt)
