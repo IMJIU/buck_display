@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>buck</title>
-    <script src="echarts.min.js"></script>
+    <script src="js/echarts.min.js"></script>
     <!--<script src="jquery-3.3.1.min.js"></script>-->
     <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
-    <script src="buck.js"></script>
-    <script src="common.js"></script>
-    <script src="WdatePicker.js"></script>
-    <script src="jquery.date.js"></script>
+    <script src="js/buck.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/WdatePicker.js"></script>
+    <script src="js/jquery.date.js"></script>
 </head>
 
 <body>
 <center><h1 id="title"></h1></center>
 <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
-<div id="main" style="width: 1200px;height:600px;"></div>
+<div id="main" style="width: 1200px;height:600px;float:left"></div>
+<div id="tb" style="width: 20%;float: right"></div>
 <script>
     var trade;
     function getUrl() {
@@ -24,9 +25,12 @@
     $(function () {
         trade = getParam("trade");
         $('#title').html(decodeURIComponent(trade));
-        $.get(getUrl() , function (data, status) {
+        $.get(getUrl(), function (data, status) {
             refreshData(data);
         });
+        $.get("http://localhost:8888/tradeCom?trade=" + trade, function (data, s) {
+            loadTable(data);
+        })
     });
 
     // 基于准备好的dom，初始化echarts实例
@@ -55,7 +59,7 @@
         var set = new HashSet();
         for (var i = 0; i < data.length; i++) {
             var d = data[i];
-            set.put(d.Dt.substring(4,8));
+            set.put(d.Dt.substring(4, 8));
             hugeM.push(d.Huge_m);
             coreM.push(d.Core_m);
             bigM.push(d.Big_m);
@@ -71,9 +75,12 @@
         small.data = smallM;
         p.data = pM;
         sh.data = shv;
-        initMoney(huge,  core,  big,  mid,  small, sh,p, series);
+        initMoney(huge, core, big, mid, small, sh, p, series);
         xAxis = set.getAll();
         option = {
+            grid: {
+                right: '20%'
+            },
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
@@ -84,7 +91,7 @@
                 }
             },
             legend: {
-                data: ['H', 'B', 'M', 'S', "Total","SH"]
+                data: ['H', 'B', 'M', 'S', "Total", "SH"]
             },
             xAxis: [
                 {
@@ -105,35 +112,44 @@
                 }, {
                     type: 'value',
                     name: '大盘',
+                    min: 2800,
+                    offset: 80,
                     axisLabel: {
-                        formatter: '{value} '
+                        formatter: '{value}点 '
+                    }
+                }, {
+                    type: 'value',
+                    max: 10,
+                    name: '涨跌',
+                    axisLabel: {
+                        formatter: '{value}% '
                     }
                 }
             ],
             series: series
         };
-        console.log("series",series);
+        console.log("series", series);
         // 使用刚指定的配置项和数据显示图表。
         myChart.setOption(option);
     }
-    function initMoney(huge,  core,  big,  mid, small, sh,p, series) {
+    function initMoney(huge, core, big, mid, small, sh, p, series) {
         huge.name = "H";
         big.name = "B";
         mid.name = "M";
         core.name = "Total";
         small.name = "S";
-        p.name="P";
-        p.yAxisIndex=1;
-        sh.name="SH";
-        sh.yAxisIndex=1;
+        p.name = "P";
+        p.yAxisIndex = 2;
+        sh.name = "SH";
+        sh.yAxisIndex = 1;
         huge.type = "bar";
         core.type = "line";
-        core.areaStyle={normal: {}};
+        core.areaStyle = {normal: {}};
         mid.type = "bar";
         big.type = "bar";
         small.type = "bar";
-        sh.type="line";
-        p.type="line";
+        sh.type = "line";
+        p.type = "line";
         series.push(p);
         series.push(huge);
         series.push(big);
@@ -142,7 +158,30 @@
         series.push(core);
         series.push(sh);
     }
-
+    function loadTable(data) {
+        var table = document.createElement("table");
+        table.border = "1";
+        table.width = "100%";
+        var tr, td,td2;
+        for (var i = 0; i < data.length; i++) {
+            var d = data[i];
+            //循环插入元素
+            tr = table.insertRow(table.rows.length);
+            if (i % 2 === 0) {
+                tr.style.backgroundColor = '#d14a61';
+            } else {
+                tr.style.backgroundColor = '#5793f3';
+            }
+            td = tr.insertCell(0);
+            td.innerHTML = d.Bname;
+            td.align = "center";
+            td2 = tr.insertCell(1);
+            td2.innerHTML = d.Bcode;
+            td2.align = "center";
+        }
+        console.log(table);
+        document.querySelector("#tb").appendChild(table);
+    }
 </script>
 </body>
 </html>

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>buck</title>
-    <script src="echarts.min.js"></script>
+    <script src="js/echarts.min.js"></script>
     <!--<script src="jquery-3.3.1.min.js"></script>-->
-    <script src="http://www.jq22.com/jquery/jquery-1.10.2.js"></script>
-    <script src="buck.js"></script>
-    <script src="common.js"></script>
-    <script src="WdatePicker.js"></script>
-    <script src="jquery.date.js"></script>
+    <script src="js/jquery-1.10.2.min.js"></script>
+    <script src="js/buck.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/WdatePicker.js"></script>
+    <script src="js/jquery.date.js"></script>
 </head>
 
 <body>
@@ -130,7 +130,7 @@
         huge.type = "bar";
         all.name = "P";
         all.type = "line";
-        all.yAxisIndex=1;
+        all.yAxisIndex = 1;
         core.name = "C";
         core.type = "line";
         core.areaStyle = {normal: {}};
@@ -191,7 +191,7 @@
                 }
             },
             legend: {
-                data: ['H', 'B', 'M', 'S', "C","P"]
+                data: ['H', 'B', 'M', 'S', "C", "P"]
             },
             xAxis: [
                 {
@@ -229,6 +229,7 @@
     }
 
     function dtChange(dt, type) {
+        var url = getUrl();
         pd = dt.substring(0, 8);
         pdt = dt;
         if (type) {
@@ -237,7 +238,12 @@
             type = "";
         }
         $('#dd').val(dt);
-        $.get(getUrl() + "&dt=" + dt + type, function (data, status) {
+        if (!isOver()) {
+            url + "&dt=" + dt + type;
+        } else {
+            url + type;
+        }
+        $.get(url, function (data, status) {
             refreshData(data);
         });
     }

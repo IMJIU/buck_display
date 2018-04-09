@@ -128,6 +128,23 @@ func GetTradeTrend(trade string, start string, end string) string {
 	return string(s)
 }
 
+func GetTradeCom(trade string, start string, end string) string {
+	fmt.Println("GetTradeTrend trade", trade, "start", start, "end", end)
+	var data []SimpleDb.DataRow
+	sql := "select distinct bname,bcode from buck_trend where trade_name = '" + trade + "' and dt >= '" + start + "' and dt<='" + end + "'"
+	fmt.Println(sql);
+	data, _ = db.QueryDataRows(sql)
+	len := len(data)
+	var arr [200]*TrendInfo
+	for i := 0; i < len; i++ {
+		t := new(TrendInfo)
+		data[i].GetValue("bname", &t.Bname)
+		data[i].GetValue("bcode", &t.Bcode)
+		arr[i] = t
+	}
+	s, _ := json.Marshal(arr[0:len])
+	return string(s)
+}
 func GetCashFlow(start string, end string) string {
 	fmt.Println("GetCashFlow", "start", start, "end", end)
 	var data []SimpleDb.DataRow

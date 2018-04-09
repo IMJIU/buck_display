@@ -16,10 +16,11 @@ var db *SimpleDb.MyDb
 
 func main() {
 	DB.InitDB()
-	http.HandleFunc("/buckInfo", GetBuckInfo)       //设置访问的路由
+	http.HandleFunc("/buckInfo", GetBuckInfo)
 	http.HandleFunc("/tradeTrend", GetTradeTrend);
+	http.HandleFunc("/tradeCom", GetTradeCom);
 	http.HandleFunc("/cashflow", GetCashFlow);
-	err := http.ListenAndServe(":8888", nil) //设置监听的端口
+	err := http.ListenAndServe(":8888", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -27,9 +28,8 @@ func main() {
 func GetCashFlow(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	end := time.Now()
-	start := end.Add(-14 * time.Hour * 24) //当前时间加24小时，即明天的这个时间
-	var result string
-	result = DB.GetCashFlow(start.Format("20060102"), end.Format("20060102"))
+	start := end.Add(-14 * time.Hour * 24)
+	result := DB.GetCashFlow(start.Format("20060102"), end.Format("20060102"))
 	//fmt.Println("result",result);
 	writeToClient(w, result)
 }
@@ -37,13 +37,20 @@ func GetTradeTrend(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	trade := r.Form["trade"]
 	end := time.Now()
-	start := end.Add(-14 * time.Hour * 24) //当前时间加24小时，即明天的这个时间
-	var result string
-	result = DB.GetTradeTrend(trade[0], start.Format("20060102"), end.Format("20060102"))
-	//fmt.Println("result",result);
+	start := end.Add(-14 * time.Hour * 24)
+	end = end.Add(time.Hour * 24)
+	result := DB.GetTradeTrend(trade[0], start.Format("20060102"), end.Format("20060102"))
 	writeToClient(w, result)
 }
-
+func GetTradeCom(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	trade := r.Form["trade"]
+	end := time.Now()
+	start := end.Add(-14 * time.Hour * 24)
+	end = end.Add(time.Hour * 24)
+	result := DB.GetTradeCom(trade[0], start.Format("20060102"), end.Format("20060102"))
+	writeToClient(w, result)
+}
 func GetBuckInfo(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	dt := r.Form["dt"]
