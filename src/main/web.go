@@ -7,8 +7,8 @@ import (
 	"net/http"
 	//"strings"
 	_ "github.com/lib/pq"
-	"../SimpleDb"
-	"../DB"
+	"SimpleDb"
+	"DB"
 	"time"
 )
 

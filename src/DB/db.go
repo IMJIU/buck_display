@@ -3,7 +3,7 @@ package DB
 import (
 	"encoding/json"
 	"fmt"
-	"../SimpleDb"
+	"SimpleDb"
 	_ "github.com/lib/pq"
 )
 
